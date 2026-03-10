@@ -1,3 +1,4 @@
+import gleam/dict
 import gleam/list
 import gleam/string
 import lustre
@@ -5,6 +6,7 @@ import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
+import pokedex
 import utils.{type TableData}
 
 // MAIN ------------------------------------------------------------------------
@@ -20,7 +22,11 @@ pub fn main() {
 
 type Model {
   TeamNeedsToBeEntered(user_input: String)
-  TeamHasBeenEntered(names: List(String), table_data: List(TableData))
+  TeamHasBeenEntered(
+    names: List(String),
+    table_data: List(TableData),
+    num_lookup: dict.Dict(String, String),
+  )
 }
 
 fn init(_) -> Model {
@@ -38,7 +44,12 @@ fn update(model: Model, msg: Msg) -> Model {
   case msg {
     UserSubmittedTeam(input) -> {
       case utils.get_data(input) {
-        Ok(#(names, table_data)) -> TeamHasBeenEntered(names, table_data)
+        Ok(#(names, table_data)) ->
+          TeamHasBeenEntered(
+            names,
+            table_data,
+            dict.from_list(pokedex.number_lookup),
+          )
         Error(_) -> model
       }
     }
@@ -59,9 +70,9 @@ fn view(model: Model) -> Element(Msg) {
         view_input(user_input),
         butttton(user_input),
       ]
-      TeamHasBeenEntered(names, table_data) -> [
+      TeamHasBeenEntered(names, table_data, num_lookup) -> [
         view_header(),
-        view_parsed(names, table_data),
+        view_parsed(names, table_data, num_lookup),
       ]
     },
   )
@@ -146,15 +157,38 @@ fn butttton(input: String) {
   ])
 }
 
-fn ththing(text) {
+fn th_summary(text) {
   html.th([attribute.class("text-center text-xs")], [html.text(text)])
 }
 
-fn render_headers(mons) {
-  list.map(mons, ththing)
+fn pkmn_img(name: String, num_lookup) {
+  case dict.get(num_lookup, name) {
+    Ok(num) -> {
+      let url =
+        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/"
+        <> num
+        <> ".png"
+      html.th([], [
+        html.img([
+          attribute.class("mx-auto"),
+          attribute.alt(name),
+          attribute.src(url),
+          attribute.width(42),
+          attribute.height(42),
+        ]),
+      ])
+    }
+    Error(_) -> {
+      html.th([attribute.class("text-center text-xs")], [html.text(name)])
+    }
+  }
+}
+
+fn render_headers(mons, num_lookup) {
+  list.map(mons, pkmn_img(_, num_lookup))
   |> list.prepend(html.th([], []))
-  |> list.append([ththing("Total Weak")])
-  |> list.append([ththing("Total Resist")])
+  |> list.append([th_summary("Total Weak")])
+  |> list.append([th_summary("Total Resist")])
 }
 
 fn td_type(type_name: String) {
@@ -230,7 +264,7 @@ fn render_body(data) {
   list.map(data, render_row)
 }
 
-fn view_parsed(names: List(String), table_data: List(TableData)) {
+fn view_parsed(names: List(String), table_data: List(TableData), num_lookup) {
   html.div(
     [
       attribute.class(
@@ -240,7 +274,7 @@ fn view_parsed(names: List(String), table_data: List(TableData)) {
     [
       html.table([attribute.class("table table-xs table-zebra")], [
         html.thead([], [
-          html.tr([], render_headers(names)),
+          html.tr([], render_headers(names, num_lookup)),
         ]),
         html.tbody([], render_body(table_data)),
       ]),

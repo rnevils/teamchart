@@ -1,11 +1,8 @@
-import gleam/set
-import utils
-
 import gleam/list
-
-// import gleam/result.{type Error}
+import gleam/set
 import gleeunit
 import pokedex
+import utils
 
 pub fn main() -> Nil {
   gleeunit.main()
