@@ -1,0 +1,48 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Gleam
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "28.0"
+          gleam-version: "1.14.0"
+          rebar3-version: "3"
+      - name: Install dependencies
+        run: gleam deps download
+      - name: Download DaisyUI files
+        run: |
+          mkdir -p src/vendor && \
+          curl -sLo src/vendor/daisyui.mjs https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.mjs && \
+          curl -sLo src/vendor/daisyui-theme.mjs https://github.com/saadeghi/daisyui/releases/latest/download/daisyui-theme.mjs
+      - name: Build app
+        run: gleam run -m lustre/dev build --minify --outdir=dist
+      - name: Fix asset paths for GitHub Pages
+        run: |
+          sed -i 's|src="/teamchart.js"|src="/teamchart/teamchart.js"|' dist/index.html
+          sed -i 's|href="/teamchart.css"|href="/teamchart/teamchart.css"|' dist/index.html
+          sed -i 's|href="/favicon.ico"|href="/teamchart/favicon.ico"|' dist/index.html
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "dist"
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

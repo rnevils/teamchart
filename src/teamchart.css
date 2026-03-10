@@ -1,0 +1,129 @@
+@import "tailwindcss";
+
+@source not "./tailwindcss";
+@source not "./vendor/daisyui{,*}.mjs";
+
+  .type-bug {
+    background-color: #a6b91a;
+    color: white;
+  }
+
+  .type-dark {
+    background-color: #705746;
+    color: white;
+  }
+
+  .type-dragon {
+    background-color: #6f35fc;
+    color: white;
+  }
+
+  .type-electric {
+    background-color: #f7d02c;
+    color: white;
+  }
+
+  .type-fighting {
+    background-color: #c22e28;
+    color: white;
+  }
+
+  .type-fire {
+    background-color: #ee8130;
+    color: white;
+  }
+
+  .type-flying {
+    background-color: #a98ff3;
+    color: white;
+  }
+
+  .type-ghost {
+    background-color: #735797;
+    color: white;
+  }
+
+  .type-grass {
+    background-color: #7ac74c;
+    color: white;
+  }
+
+  .type-ground {
+    background-color: #e2bf65;
+    color: white;
+  }
+
+  .type-ice {
+    background-color: #96d9d6;
+    color: white;
+  }
+
+  .type-normal {
+    background-color: #a8a77a;
+    color: white;
+  }
+
+  .type-poison {
+    background-color: #a33ea1;
+    color: white;
+  }
+
+  .type-psychic {
+    background-color: #f95587;
+    color: white;
+  }
+
+  .type-rock {
+    background-color: #b6a136;
+    color: white;
+  }
+
+  .type-steel {
+    background-color: #b7b7ce;
+    color: white;
+  }
+
+  .type-water {
+    background-color: #6390f0;
+    color: white;
+  }
+
+  .quad-resist {
+    background-color: rgba(0, 128, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 21px;
+    text-align: center;
+    border-radius: 2px;
+    height: 21px;
+  }
+
+  .quad-eff {
+    background-color: rgba(255, 0, 0, 0.557);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 21px;
+    text-align: center;
+    border-radius: 2px;
+    height: 21px;
+  }
+
+  .no-eff {
+    background-color: rgba(128, 128, 128, 0.596);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 21px;
+    text-align: center;
+    border-radius: 2px;
+    height: 21px;
+    color: #ffdd57;
+  }
+
+@plugin "./vendor/daisyui.mjs"  {
+  themes: dark --default, light
+}
+
+
