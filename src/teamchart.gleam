@@ -168,7 +168,7 @@ fn pkmn_img(name: String, num_lookup) {
         "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/"
         <> num
         <> ".png"
-      html.th([], [
+      html.td([], [
         html.img([
           attribute.class("mx-auto"),
           attribute.alt(name),
@@ -228,7 +228,7 @@ fn td_total_weak(num: String) {
   ])
 }
 
-fn special_num(class, num) {
+fn render_num(class, num) {
   html.td([], [
     html.div([attribute.class("flex justify-center")], [
       html.div([attribute.class(class)], [
@@ -240,12 +240,12 @@ fn special_num(class, num) {
 
 fn td_num_weak(num: Int) {
   case num {
-    0 -> special_num("no-eff", "0")
-    25 -> special_num("quad-resist", "¼")
-    50 -> html.td([attribute.class("text-center")], [html.text("½")])
-    200 -> html.td([attribute.class("text-center")], [html.text("2")])
-    400 -> special_num("quad-eff", "4")
-    _ -> html.td([attribute.class("text-center")], [html.text("")])
+    0 -> render_num("no-eff", "0")
+    25 -> render_num("quad-resist", "¼")
+    50 -> render_num("normal-num", "¼")
+    200 -> render_num("normal-num", "2")
+    400 -> render_num("quad-eff", "4")
+    _ -> render_num("normal-num", "")
   }
 }
 
