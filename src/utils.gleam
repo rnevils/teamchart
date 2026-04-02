@@ -25,6 +25,13 @@ fn calc_total_resist(values: List(Int)) {
   |> int.to_string
 }
 
+fn check_mime(l: List(String)) -> List(String) {
+  case l {
+    ["Mime", "Mr."] -> ["Mr. Mime"]
+    _ -> l
+  }
+}
+
 fn process_name_line(s: String, names_set) {
   // need to handle nicknames, items, gender
   s
@@ -32,6 +39,7 @@ fn process_name_line(s: String, names_set) {
   |> string.replace(")", "")
   |> string.split(" ")
   |> list.reverse
+  |> check_mime
   // There is an edge case where if the actual name is invalid but they put a valid name in the nickname it will use that valid name. I'm going to ignore that edge case
   |> list.find(set.contains(names_set, _))
 }
