@@ -242,7 +242,7 @@ fn td_num_weak(num: Int) {
   case num {
     0 -> render_num("no-eff", "0")
     25 -> render_num("quad-resist", "¼")
-    50 -> render_num("normal-num", "¼")
+    50 -> render_num("normal-num", "½")
     200 -> render_num("normal-num", "2")
     400 -> render_num("quad-eff", "4")
     _ -> render_num("normal-num", "")

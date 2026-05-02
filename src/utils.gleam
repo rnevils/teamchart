@@ -2,7 +2,7 @@ import gleam/dict
 import gleam/int
 import gleam/list
 import gleam/result
-import gleam/set
+import gleam/set.{type Set}
 import gleam/string
 import pokedex
 
@@ -28,11 +28,13 @@ fn calc_total_resist(values: List(Int)) {
 fn check_mime(l: List(String)) -> List(String) {
   case l {
     ["Mime", "Mr."] -> ["Mr. Mime"]
+    [_, _, _, "Mime", "Mr.", ..] -> ["Mr. Mime"]
+    [_, _, "Mime", "Mr.", ..] -> ["Mr. Mime"]
     _ -> l
   }
 }
 
-fn process_name_line(s: String, names_set) {
+fn process_name_line(s: String, names_set: Set(String)) {
   // need to handle nicknames, items, gender
   s
   |> string.replace("(", "")
@@ -66,7 +68,9 @@ fn get_weakness_data(mons: List(String), weakness_data_dict) {
   |> result.map(list.transpose)
 }
 
-pub fn get_data(input: String) -> Result(#(List(String), List(TableData)), Nil) {
+pub fn get_data(
+  input: String,
+) -> Result(#(List(String), List(TableData)), Nil) {
   let names_set = set.from_list(list.map(pokedex.weakness_data, fn(x) { x.0 }))
   let weakness_data_dict = dict.from_list(pokedex.weakness_data)
 
