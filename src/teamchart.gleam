@@ -1,8 +1,9 @@
 import gleam/dict
+import gleam/dynamic/decode
 import gleam/list
 import gleam/string
 import lustre
-import lustre/attribute
+import lustre/attribute.{type Attribute}
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
@@ -37,13 +38,20 @@ fn init(_) -> Model {
 
 type Msg {
   UserChangedTextArea(String)
-  UserSubmittedTeam(String)
+  UserSubmitTeam
 }
 
 fn update(model: Model, msg: Msg) -> Model {
   case msg {
-    UserSubmittedTeam(input) -> {
-      case utils.get_data(input) {
+    UserSubmitTeam -> handle_submit_team(model)
+    UserChangedTextArea(input) -> TeamNeedsToBeEntered(input)
+  }
+}
+
+fn handle_submit_team(model: Model) {
+  case model {
+    TeamNeedsToBeEntered(user_input:) -> {
+      case utils.get_data(user_input) {
         Ok(#(names, table_data)) ->
           TeamHasBeenEntered(
             names,
@@ -53,10 +61,21 @@ fn update(model: Model, msg: Msg) -> Model {
         Error(_) -> model
       }
     }
-    UserChangedTextArea(input) -> {
-      TeamNeedsToBeEntered(input)
-    }
+    _ -> model
   }
+}
+
+pub fn on_enter_and_modifier(message) -> Attribute(message) {
+  event.on("keydown", {
+    use key <- decode.field("key", decode.string)
+    use ctrl_key <- decode.field("ctrlKey", decode.bool)
+    use meta_key <- decode.field("metaKey", decode.bool)
+
+    case { ctrl_key || meta_key } && key == "Enter" {
+      True -> message |> decode.success
+      False -> message |> decode.failure("")
+    }
+  })
 }
 
 // VIEW ------------------------------------------------------------------------
@@ -68,7 +87,7 @@ fn view(model: Model) -> Element(Msg) {
       TeamNeedsToBeEntered(user_input) -> [
         view_header(),
         view_input(user_input),
-        butttton(user_input),
+        submit_button(),
       ]
       TeamHasBeenEntered(names, table_data, num_lookup) -> [
         view_header(),
@@ -138,6 +157,7 @@ fn view_input(input: String) {
           ),
           attribute.value(input),
           event.on_input(UserChangedTextArea),
+          on_enter_and_modifier(UserSubmitTeam),
         ],
         "",
       ),
@@ -145,11 +165,11 @@ fn view_input(input: String) {
   ])
 }
 
-fn butttton(input: String) {
+fn submit_button() {
   html.div([attribute.class("text-right")], [
     html.button(
       [
-        event.on_click(UserSubmittedTeam(input)),
+        event.on_click(UserSubmitTeam),
         attribute.class("btn btn-primary "),
       ],
       [html.text("Submit")],
