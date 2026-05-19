@@ -4,16 +4,18 @@ import gleam/list
 import gleam/string
 import lustre
 import lustre/attribute.{type Attribute}
+import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html
 import lustre/event
 import pokedex
+import timer
 import utils.{type TableData}
 
 // MAIN ------------------------------------------------------------------------
 
 pub fn main() {
-  let app = lustre.simple(init, update, view)
+  let app = lustre.application(init, update, view)
   let assert Ok(_) = lustre.start(app, "#app", Nil)
 
   Nil
@@ -22,7 +24,7 @@ pub fn main() {
 // MODEL -----------------------------------------------------------------------
 
 type Model {
-  TeamNeedsToBeEntered(user_input: String)
+  TeamNeedsToBeEntered(user_input: String, toasts: List(String))
   TeamHasBeenEntered(
     names: List(String),
     table_data: List(TableData),
@@ -30,8 +32,10 @@ type Model {
   )
 }
 
-fn init(_) -> Model {
-  TeamNeedsToBeEntered("")
+fn init(_) -> #(Model, Effect(Msg)) {
+  let model = TeamNeedsToBeEntered("", [])
+  let effect = effect.none()
+  #(model, effect)
 }
 
 // UPDATE ----------------------------------------------------------------------
@@ -39,18 +43,35 @@ fn init(_) -> Model {
 type Msg {
   UserChangedTextArea(String)
   UserSubmitTeam
+  CloseToast
 }
 
-fn update(model: Model, msg: Msg) -> Model {
+fn pure(value: value) -> #(value, Effect(message)) {
+  #(value, effect.none())
+}
+
+fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
   case msg {
     UserSubmitTeam -> handle_submit_team(model)
-    UserChangedTextArea(input) -> TeamNeedsToBeEntered(input)
+    UserChangedTextArea(input) -> TeamNeedsToBeEntered(input, []) |> pure
+    CloseToast -> {
+      case model {
+        TeamNeedsToBeEntered(user_input:, toasts:) -> {
+          case toasts {
+            [] -> panic
+            [_, ..rest] ->
+              TeamNeedsToBeEntered(user_input:, toasts: rest) |> pure
+          }
+        }
+        TeamHasBeenEntered(names:, table_data:, num_lookup:) -> panic
+      }
+    }
   }
 }
 
 fn handle_submit_team(model: Model) {
   case model {
-    TeamNeedsToBeEntered(user_input:) -> {
+    TeamNeedsToBeEntered(user_input:, toasts:) -> {
       case utils.get_data(user_input) {
         Ok(#(names, table_data)) ->
           TeamHasBeenEntered(
@@ -58,10 +79,22 @@ fn handle_submit_team(model: Model) {
             table_data,
             dict.from_list(pokedex.number_lookup),
           )
-        Error(_) -> model
+          |> pure
+        Error(_) -> {
+          let toast_text = "Unable to parse input"
+          let model =
+            TeamNeedsToBeEntered(
+              ..model,
+              toasts: list.prepend(model.toasts, toast_text),
+            )
+
+          let effect = timer.after(1500, CloseToast)
+
+          #(model, effect)
+        }
       }
     }
-    _ -> model
+    _ -> pure(model)
   }
 }
 
@@ -84,9 +117,9 @@ fn view(model: Model) -> Element(Msg) {
   html.div(
     [attribute.class("font-mono p-4 w-full max-w-5xl mx-auto space-y-8")],
     case model {
-      TeamNeedsToBeEntered(user_input) -> [
+      TeamNeedsToBeEntered(user_input:, toasts:) -> [
         view_header(),
-        view_input(user_input),
+        view_input(user_input, toasts),
         submit_button(),
       ]
       TeamHasBeenEntered(names, table_data, num_lookup) -> [
@@ -145,7 +178,20 @@ fn view_header() {
   )
 }
 
-fn view_input(input: String) {
+fn render_toasts(toasts: List(String)) {
+  list.map(toasts, fn(t) {
+    html.div(
+      [
+        attribute.class("alert alert-error alert-soft"),
+      ],
+      [
+        html.span([], [html.text(t)]),
+      ],
+    )
+  })
+}
+
+fn view_input(input: String, toasts: List(String)) {
   html.div([attribute.class("")], [
     html.div([attribute.class("")], [
       html.textarea(
@@ -161,6 +207,7 @@ fn view_input(input: String) {
         ],
         "",
       ),
+      html.div([attribute.class("toast toast-start")], render_toasts(toasts)),
     ]),
   ])
 }
