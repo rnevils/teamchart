@@ -292,7 +292,7 @@ fn view_parsed(names: List(String), table_data: List(TableData), num_lookup) {
       ),
     ],
     [
-      html.table([attribute.class("table table-xs table-zebra")], [
+      html.table([attribute.class("table table-xs ")], [
         html.thead([], [
           html.tr([], render_headers(names, num_lookup)),
         ]),
