@@ -63,7 +63,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
               TeamNeedsToBeEntered(user_input:, toasts: rest) |> pure
           }
         }
-        TeamHasBeenEntered(names:, table_data:, num_lookup:) -> panic
+        _ -> panic
       }
     }
   }
@@ -71,7 +71,7 @@ fn update(model: Model, msg: Msg) -> #(Model, Effect(Msg)) {
 
 fn handle_submit_team(model: Model) {
   case model {
-    TeamNeedsToBeEntered(user_input:, toasts:) -> {
+    TeamNeedsToBeEntered(user_input, _) -> {
       case utils.get_data(user_input) {
         Ok(#(names, table_data)) ->
           TeamHasBeenEntered(
