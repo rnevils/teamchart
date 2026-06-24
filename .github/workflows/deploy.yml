@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to VPS
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to GitHub Pages
+    name: Deploy to VPS
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -20,8 +20,8 @@ jobs:
       - name: Set up Gleam
         uses: erlef/setup-beam@v1
         with:
-          otp-version: "28.0"
-          gleam-version: "1.16.0"
+          otp-version: "29.0"
+          gleam-version: "1.17.0"
           rebar3-version: "3"
       - name: Install dependencies
         run: gleam deps download
@@ -32,17 +32,44 @@ jobs:
           curl -sLo src/vendor/daisyui-theme.mjs https://github.com/saadeghi/daisyui/releases/latest/download/daisyui-theme.mjs
       - name: Build app
         run: gleam run -m lustre/dev build --minify --outdir=dist
-      - name: Fix asset paths for GitHub Pages
+
+
+      - name: Add SSH key
         run: |
-          sed -i 's|src="/teamchart.js"|src="/teamchart/teamchart.js"|' dist/index.html
-          sed -i 's|href="/teamchart.css"|href="/teamchart/teamchart.css"|' dist/index.html
-          sed -i 's|href="/favicon.ico"|href="/teamchart/favicon.ico"|' dist/index.html
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: "dist"
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+
+      - name: Deploy dist folder via rsync
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SSH_PORT || 22 }}" \
+            dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/
+
+
+
+      # - name: rsync
+      #   run: |
+        
+      # - name: Fix asset paths for GitHub Pages
+      #   run: |
+      #     sed -i 's|src="/teamchart.js"|src="/teamchart/teamchart.js"|' dist/index.html
+      #     sed -i 's|href="/teamchart.css"|href="/teamchart/teamchart.css"|' dist/index.html
+      #     sed -i 's|href="/favicon.ico"|href="/teamchart/favicon.ico"|' dist/index.html
+      # - name: Setup Pages
+      #   uses: actions/configure-pages@v5
+      # - name: Upload artifact
+      #   uses: actions/upload-pages-artifact@v3
+      #   with:
+      #     path: "dist"
+      # - name: Deploy to GitHub Pages
+      #   id: deployment
+      #   uses: actions/deploy-pages@v4
