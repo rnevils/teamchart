@@ -41,18 +41,13 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-
 
       - name: Deploy dist folder via rsync
         run: |
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SSH_PORT || 22 }}" \
-            dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/
+          rsync -rltz --delete \
+            --chmod=D755,F644 \
+            -e "ssh -i ~/.ssh/id_ed25519 \
+            dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/srv/www/teamchart/
 
 
 
