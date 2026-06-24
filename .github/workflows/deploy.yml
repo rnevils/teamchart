@@ -42,11 +42,19 @@ jobs:
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
 
+      - name: check
+        run: |
+          ls -lah
+          pwd
+
+
+
+
       - name: Deploy dist folder via rsync
         run: |
           rsync -rltz --delete \
             --chmod=D755,F644 \
-            -e "ssh -i ~/.ssh/id_ed25519 \
+            -e "ssh -i ~/.ssh/id_ed25519" \
             dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/srv/www/teamchart/
 
 
